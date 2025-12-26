@@ -14,7 +14,7 @@ library(ggpubr)
 
 
 #####  plot predictions
-# load preds
+# load current and historical preds
 current <- rast('output/predictions/current.tif')
 lgm <- rast('output/predictions/lgm_pred.tif')
 mh <- rast('output/predictions/mh_pred.tif')
@@ -91,7 +91,43 @@ mh <- rast('output/predictions/mh_pred.tif')
 ggsave('plots/preds.png', width = 28, height = 10, dpi = 800, units = 'cm')
 
 
+#####  plot future model outputs
+# load future preds 
+futures_2041_2070_370 <- rast('output/predictions/futures_2041_2070_370.tif')
+futures_2041_2070_585 <- rast('output/predictions/futures_2041_2070_585.tif')
+futures_2071_2100_370 <- rast('output/predictions/futures_2071_2100_370.tif')
+futures_2071_2100_585 <- rast('output/predictions/futures_2071_2100_585.tif')
+
+# combine all 
+futures <- c(futures_2041_2070_370, futures_2041_2070_585, futures_2071_2100_370, futures_2071_2100_585)
+print(futures)
+
+#
+
+
+
+
+
+#####  get variable contributions
+# load saved model
+test_enms <- readRDS('output/models/test_enms.rds')
+
+# get results
+test_res <- eval.results(test_enms)
+print(test_res)
+
+# find optimal model
+(opt_mod <- test_res %>% dplyr::filter(or.10p.avg <= 0.1) %>% dplyr::filter(auc.diff.avg == min(auc.diff.avg)) %>%
+    dplyr::filter(auc.val.avg == max(auc.val.avg)))
+
+# get var importance
+var.imp <- eval.variable.importance(test_enms)[[opt_mod$tune.args]]
+print(var.imp)
+
+
 #####  plot response curves
+
+
 
 
 
