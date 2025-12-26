@@ -5,10 +5,11 @@ rm(list = ls(all.names = T))
 gc()
 
 # increase java heap space
-options(java.parameters = "-Xmx16g")
+options(java.parameters = "-Xmx32g")
 
 # load packages
 library(ENMeval)
+library(ENMwrap)
 library(ntbox)
 library(terra)
 library(dplyr)
@@ -113,15 +114,70 @@ writeRaster(lgm_pred, 'output/predictions/lgm_pred.tif', overwrite = T)
 writeRaster(mh_pred, 'output/predictions/mh_pred.tif', overwrite = T)
 
 
+#####  predict under future climate scenarios
+# load 2041-2070 ssp370
+futures_2041_2070_370 <- rast(list.files(path = 'data/envs/future/bio/mri-esm2/2041_2070/ssp370/', pattern = '.tif$', full.names = T))
+futures_2041_2070_370 <- futures_2041_2070_370[[c('bio01', 'bio02', 'bio03', 'bio06', 'bio08', 'bio14', 'bio15', 'bio18')]] 
+print(futures_2041_2070_370)
+plot(futures_2041_2070_370[[1]])
+
+# load 2041-2070 ssp585
+futures_2041_2070_585 <- rast(list.files(path = 'data/envs/future/bio/mri-esm2/2041_2070/ssp585/', pattern = 'tif$', full.names = T))
+futures_2041_2070_585 <- futures_2041_2070_585[[c('bio01', 'bio02', 'bio03', 'bio06', 'bio08', 'bio14', 'bio15', 'bio18')]] 
+print(futures_2041_2070_585)
+plot(futures_2041_2070_585[[1]])
+
+# load 2071-2100 ssp370
+futures_2071_2100_370 <- rast(list.files(path = 'data/envs/future/bio/mri-esm2/2071_2100/ssp370/', pattern = '.tif$', full.names = T))
+futures_2071_2100_370 <- futures_2071_2100_370[[c('bio01', 'bio02', 'bio03', 'bio06', 'bio08', 'bio14', 'bio15', 'bio18')]] 
+print(futures_2071_2100_370)
+plot(futures_2071_2100_370[[1]])
+
+# load 2071-2100 ssp585
+futures_2071_2100_585 <- rast(list.files(path = 'data/envs/future/bio/mri-esm2/2071_2100/ssp585/', pattern = '.tif$', full.names = T))
+futures_2071_2100_585 <- futures_2071_2100_585[[c('bio01', 'bio02', 'bio03', 'bio06', 'bio08', 'bio14', 'bio15', 'bio18')]] 
+print(futures_2071_2100_585)
+plot(futures_2071_2100_585[[1]])
+
+# make future predictions
+# NOTE == just use SpatRaster although the manual tells you use RasterStack. The "predict" function that is inside the "model_predictr" function can take SpatRaster 
+future_preds <- model_predictr(model = eval.models(test_enms)[[opt_mod$tune.args]],
+                               preds.list = list(futures_2041_2070_370, futures_2041_2070_585, futures_2071_2100_370, futures_2071_2100_585),
+                               pred.names = c('futures_2041_2070_370', 'futures_2041_2070_585', 'futures_2071_2100_370', 'futures_2071_2100_585'),
+                               method = 'single2multi')
+
+# export future layers
+future_preds <- rast(future_preds)
+
+for (i in 1:nlyr(future_preds)) {
+  writeRaster(future_preds[[i]], paste0('output/predictions/', names(future_preds)[i], '.tif'), overwrite = T)
+}
+
+
 #####  conduct mess
 # run
 lgm_mess <- ntb_mess(M_stack = raster::stack(clim), G_stack = raster::stack(lgm))
 mh_mess <- ntb_mess(M_stack = raster::stack(clim), G_stack = raster::stack(mh))
 
+futures_2041_2070_370_mess <- ntb_mess(M_stack = raster::stack(clim), G_stack = raster::stack(futures_2041_2070_370))
+futures_2041_2070_585_mess <- ntb_mess(M_stack = raster::stack(clim), G_stack = raster::stack(futures_2041_2070_585))
+futures_2071_2100_370_mess <- ntb_mess(M_stack = raster::stack(clim), G_stack = raster::stack(futures_2071_2100_370))
+futures_2071_2100_585_mess <- ntb_mess(M_stack = raster::stack(clim), G_stack = raster::stack(futures_2071_2100_585))
+
 plot(lgm_mess)
 plot(mh_mess)
+
+plot(futures_2041_2070_370_mess)
+plot(futures_2041_2070_585_mess)
+plot(futures_2071_2100_370_mess)
+plot(futures_2071_2100_585_mess)
 
 # export mess layers
 writeRaster(lgm_mess, 'output/mess/lgm_mess.tif', overwrite = T)
 writeRaster(mh_mess, 'output/mess/mh_mess.tif', overwrite = T)
+
+writeRaster(futures_2041_2070_370_mess, 'output/mess/futures_2041_2070_370_mess.tif',  overwrite = T)
+writeRaster(futures_2041_2070_585_mess, 'output/mess/futures_2041_2070_585_mess.tif',  overwrite = T)
+writeRaster(futures_2071_2100_370_mess, 'output/mess/futures_2071_2100_370_mess.tif',  overwrite = T)
+writeRaster(futures_2071_2100_585_mess, 'output/mess/futures_2071_2100_585_mess.tif',  overwrite = T)
 
