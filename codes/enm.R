@@ -181,3 +181,9 @@ writeRaster(futures_2041_2070_585_mess, 'output/mess/futures_2041_2070_585_mess.
 writeRaster(futures_2071_2100_370_mess, 'output/mess/futures_2071_2100_370_mess.tif',  overwrite = T)
 writeRaster(futures_2071_2100_585_mess, 'output/mess/futures_2071_2100_585_mess.tif',  overwrite = T)
 
+
+#####  get variable contributions
+# get var importance
+var.imp <- eval.variable.importance(test_enms)[[opt_mod$tune.args]]
+print(var.imp)
+

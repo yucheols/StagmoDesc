@@ -98,31 +98,74 @@ futures_2041_2070_585 <- rast('output/predictions/futures_2041_2070_585.tif')
 futures_2071_2100_370 <- rast('output/predictions/futures_2071_2100_370.tif')
 futures_2071_2100_585 <- rast('output/predictions/futures_2071_2100_585.tif')
 
-# combine all 
-futures <- c(futures_2041_2070_370, futures_2041_2070_585, futures_2071_2100_370, futures_2071_2100_585)
-print(futures)
+# combine between time periods
+futures_2041_2070 <- c(futures_2041_2070_370, futures_2041_2070_585)
+names(futures_2041_2070) = c('SSP 370', 'SSP 585')
 
-#
+futures_2071_2100 <- c(futures_2071_2100_370, futures_2071_2100_585)
+names(futures_2071_2100) = c('SSP 370', 'SSP 585')
 
+print(futures_2041_2070)
+print(futures_2071_2100)
 
+# plot 2041 - 2070
+(plot_2041_2070 <- futures_2041_2070 %>% 
+    ggplot() +
+    geom_spatraster(data = futures_2041_2070) +
+    facet_wrap(~ lyr) +
+    coord_sf(expand = F) +
+    scale_fill_grass_c(palette = 'inferno',
+                       name = 'Suitability',
+                       breaks = c(0.1, 0.9),
+                       labels = c('Low', 'High')) +
+    labs(title = '(A) 2041 - 2071', fill = 'Suitability') +
+    theme_bw() +
+    theme(panel.border = element_rect(fill = NA),
+          strip.text = element_text(size = 16),
+          axis.ticks = element_line(color = 'black'),
+          axis.ticks.length = unit(0.2, 'cm'),
+          axis.text.y = element_text(angle = 90, hjust = 0.5),
+          axis.text = element_text(size = 14),
+          plot.title = element_text(size = 20, face = 'bold'),
+          legend.title = element_text(size = 16),
+          legend.text = element_text(size = 14),
+          legend.margin = margin(t = 0, r = 0, b = 0, l = 0),
+          plot.margin = margin(2, 2, 2, 2)))
 
+# plot 2071 - 2100
+(plot_2071_2100 <- futures_2071_2100 %>% 
+    ggplot() +
+    geom_spatraster(data = futures_2071_2100) +
+    facet_wrap(~ lyr) +
+    coord_sf(expand = F) +
+    scale_fill_grass_c(palette = 'inferno',
+                       name = 'Suitability',
+                       breaks = c(0.1, 0.9),
+                       labels = c('Low', 'High')) +
+    labs(title = '(B) 2071 - 2100', fill = 'Suitability') +
+    theme_bw() +
+    theme(panel.border = element_rect(fill = NA),
+          strip.text = element_text(size = 16),
+          axis.ticks = element_line(color = 'black'),
+          axis.ticks.length = unit(0.2, 'cm'),
+          axis.text.y = element_text(angle = 90, hjust = 0.5),
+          axis.text = element_text(size = 14),
+          plot.title = element_text(size = 20, face = 'bold'),
+          legend.title = element_text(size = 16),
+          legend.text = element_text(size = 14),
+          legend.margin = margin(t = 0, r = 0, b = 0, l = 0),
+          plot.margin = margin(2, 2, 2, 2)))
 
+# arrange
+(future_plots <- ggarrange(plot_2041_2070, plot_2071_2100, 
+                           ncol = 1, nrow = 2, align = 'hv',
+                           common.legend = T,
+                           legend = 'right',
+                           widths = 1))
 
-#####  get variable contributions
-# load saved model
-test_enms <- readRDS('output/models/test_enms.rds')
+# export plots
+ggsave('plots/future_preds.png', width = 21, height = 20, dpi = 800, units = 'cm')
 
-# get results
-test_res <- eval.results(test_enms)
-print(test_res)
-
-# find optimal model
-(opt_mod <- test_res %>% dplyr::filter(or.10p.avg <= 0.1) %>% dplyr::filter(auc.diff.avg == min(auc.diff.avg)) %>%
-    dplyr::filter(auc.val.avg == max(auc.val.avg)))
-
-# get var importance
-var.imp <- eval.variable.importance(test_enms)[[opt_mod$tune.args]]
-print(var.imp)
 
 
 #####  plot response curves
