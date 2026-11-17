@@ -101,7 +101,7 @@ mh <- rast('output/predictions/mh_pred.tif') %>% crop(ext(-119.0, -116.5, 32.5, 
                          widths = c(1, 1, 0.1)))
 
 # export plots
-ggsave('plots/preds_masked.png', width = 28, height = 10, dpi = 800, units = 'cm')
+ggsave('plots/preds_masked.png', width = 28, height = 16, dpi = 800, units = 'cm')
 
 
 #####  plot future model outputs
@@ -183,5 +183,5 @@ print(futures_2071_2100)
                            widths = c(1, 1, 0.1)))
 
 # export plots
-ggsave('plots/future_preds.png', width = 21, height = 20, dpi = 800, units = 'cm')
+ggsave('plots/future_preds.png', width = 30, height = 25, dpi = 800, units = 'cm')
 
